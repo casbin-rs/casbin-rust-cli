@@ -93,7 +93,7 @@ async fn main() {
 
             let response = json!({
                 "allow": allow,
-                "explain": explain.get(0).unwrap_or(&Vec::<String>::new()),
+                "explain": explain.first().unwrap_or(&Vec::<String>::new()),
             });
 
             println!("{}", response);
@@ -157,7 +157,7 @@ async fn test_enforce_explain() {
 
     let response = json!({
         "allow": allow,
-        "explain": explain.get(0).unwrap_or(&Vec::<String>::new()),
+        "explain": explain.first().unwrap_or(&Vec::<String>::new()),
     });
 
     let expected = json!({
