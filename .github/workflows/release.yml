@@ -14,6 +14,6 @@ on:
 jobs:
   release:
     if: github.repository == 'casbin-rs/casbin-rust-cli'
-    uses: semantic-release-action/rust/.github/workflows/release-binary.yml@v5
+    uses: casbin-rs/semantic-release-action-rust/.github/workflows/release-binary.yml@master
     secrets:
       cargo-registry-token: ${{ secrets.CARGO_TOKEN }}
