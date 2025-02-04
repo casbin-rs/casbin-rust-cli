@@ -138,31 +138,40 @@ async fn enforce_ex(model: &str, policy: &str, command_args: &[String]) -> Strin
     .to_string()
 }
 
+fn value_to_dynamic(value: Value) -> Dynamic {
+    match value {
+        Value::Object(map) => {
+            let mut rhai_map = Map::new();
+            for (k, v) in map {
+                let v: Dynamic = value_to_dynamic(v);
+                rhai_map.insert(k.into(), v);
+            }
+            Dynamic::from(rhai_map)
+        }
+        Value::String(s) => Dynamic::from(s),
+        Value::Bool(b) => Dynamic::from(b),
+        Value::Number(n) => {
+            if n.is_i64() {
+                (n.as_i64().unwrap() as i32).into()
+            } else if n.is_u64() {
+                (n.as_u64().unwrap() as i32).into()
+            } else {
+                n.as_f64().map(Dynamic::from).unwrap()
+            }
+        }
+        Value::Array(arr) => {
+            Dynamic::from(arr.into_iter().map(value_to_dynamic).collect::<Vec<_>>())
+        }
+        Value::Null => Dynamic::UNIT,
+    }
+}
+
 #[derive(Clone, Hash, Debug)]
 pub struct CommandArg(Value);
 
 impl From<CommandArg> for Dynamic {
     fn from(arg: CommandArg) -> Self {
-        match arg.0 {
-            Value::Object(map) => {
-                let mut rhai_map = Map::new();
-                for (k, v) in map {
-                    let v = Dynamic::from(match v {
-                        Value::String(s) => s,
-                        _ => v.to_string(),
-                    });
-                    rhai_map.insert(k.into(), v);
-                }
-                Dynamic::from(rhai_map)
-            }
-            Value::String(s) => Dynamic::from(s),
-            Value::Bool(b) => Dynamic::from(b),
-            Value::Number(n) => n.as_f64().map(Dynamic::from).unwrap_or(Dynamic::UNIT),
-            Value::Array(arr) => {
-                Dynamic::from(arr.into_iter().map(Dynamic::from).collect::<Vec<_>>())
-            }
-            Value::Null => Dynamic::UNIT,
-        }
+        value_to_dynamic(arg.0)
     }
 }
 
@@ -187,7 +196,7 @@ mod test {
         let response = enforce(
             "examples/basic_model.conf",
             "examples/basic_policy.csv",
-            &vec!["alice".to_owned(), "data1".to_owned(), "read".to_owned()],
+            &["alice".to_owned(), "data1".to_owned(), "read".to_owned()],
         )
         .await;
 
@@ -205,13 +214,13 @@ mod test {
         let response = enforce_ex(
             "examples/basic_model.conf",
             "examples/basic_policy.csv",
-            &vec!["alice".to_owned(), "data1".to_owned(), "read".to_owned()],
+            &["alice".to_owned(), "data1".to_owned(), "read".to_owned()],
         )
         .await;
 
         let expected = json!({
             "allow": true,
-            "explain": vec!["alice", "data1" ,"read"].iter().map(|s| s.to_string()).collect::<Vec<_>>(),
+            "explain": &["alice", "data1" ,"read"].iter().map(|s| s.to_string()).collect::<Vec<_>>(),
         })
         .to_string();
 
@@ -223,7 +232,7 @@ mod test {
         let response = enforce_ex(
             "examples/abac_model.conf",
             "examples/abac_policy.csv",
-            &vec!["alice".to_owned(), json!({"Owner": "alice"}).to_string()],
+            &["alice".to_owned(), json!({"Owner": "alice"}).to_string()],
         )
         .await;
 
