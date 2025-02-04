@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/casbin-rs/casbin-rust-cli/compare/v1.3.0...v1.4.0) (2025-02-04)
+
+
+### Features
+
+* fix bug in JSON format type conversion ([#10](https://github.com/casbin-rs/casbin-rust-cli/issues/10)) ([75a1dd1](https://github.com/casbin-rs/casbin-rust-cli/commit/75a1dd15f2e4148c886db48f83f6e9b5f32b81b1))
+
 # [1.3.0](https://github.com/casbin-rs/casbin-rust-cli/compare/v1.2.0...v1.3.0) (2025-02-04)
 
 
